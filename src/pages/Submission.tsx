@@ -177,7 +177,7 @@ ${entries.entry5 ? `**Entry 5:** ${entries.entry5}` : ''}`;
         console.log("Webhook URL configured:", !!webhookUrl);
         
         if (!webhookUrl) {
-          throw new Error("Discord webhook URL not configured");
+          throw new Error("Discord webhook URL not configured. Please contact support.");
         }
         
         const response = await fetch(webhookUrl, {
@@ -191,7 +191,9 @@ ${entries.entry5 ? `**Entry 5:** ${entries.entry5}` : ''}`;
         });
 
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          const errorText = await response.text();
+          console.error("Discord API Error:", response.status, errorText);
+          throw new Error(`Discord API error: ${response.status} - ${response.statusText}`);
         }
 
         // Clear localStorage after successful submission
@@ -214,9 +216,13 @@ ${entries.entry5 ? `**Entry 5:** ${entries.entry5}` : ''}`;
     }
     
     // All attempts failed
+    const errorMessage = attempt === 1 ? 
+      "Unable to submit your entries. Please check your internet connection and try again." :
+      `Failed to submit after ${maxRetries} attempts. Please try again later or contact support if the problem persists.`;
+    
     toast({
       title: "Submission Failed",
-      description: "Please try again. If the problem persists, refresh and start over.",
+      description: errorMessage,
       variant: "destructive",
     });
     setIsSubmitting(false);
